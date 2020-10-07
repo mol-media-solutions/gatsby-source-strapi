@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { isObject, forEach, set, castArray, startsWith } from 'lodash'
+import { isObject, startsWith, forEach, set, castArray } from 'lodash'
 import pluralize from 'pluralize'
 
 module.exports = async ({ apiURL, contentType, singleType, jwtToken, queryLimit, reporter }) => {
@@ -26,17 +26,11 @@ module.exports = async ({ apiURL, contentType, singleType, jwtToken, queryLimit,
  */
 const clean = item => {
   forEach(item, (value, key) => {
-    if (key === `__v`) {
-      // Remove mongo's __v
+    if (startsWith(key, `__`)) {
       delete item[key]
-    } else if (key === `_id`) {
-      // Rename mongo's "_id" key to "id".
+    } else if (startsWith(key, `_`)) {
       delete item[key]
-      item.id = value
-    } else if (startsWith(key, '__')) {
-      // Gatsby reserves double-underscore prefixes – replace prefix with "strapi"
-      delete item[key]
-      item[`strapi_${key.slice(2)}`] = value
+      item[key.slice(1)] = value
     } else if (isObject(value)) {
       item[key] = clean(value)
     }
