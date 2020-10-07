@@ -1,3 +1,4 @@
+import axios from 'axios'
 import fetchData from './fetch'
 import { Node } from './nodes'
 import { capitalize } from 'lodash'
@@ -17,7 +18,7 @@ exports.sourceNodes = async (
   const { createNode, deleteNode, touchNode } = actions
 
   // Authentication function
-  const jwtToken = await authentication({ loginData, reporter, apiURL })
+  let jwtToken = await authentication({ loginData, reporter, apiURL })
 
   // Start activity, Strapi data fetching
   const fetchActivity = reporter.activityTimer(`Fetched Strapi Data`)
@@ -78,7 +79,7 @@ exports.sourceNodes = async (
   // Merge single and content types and retrieve create nodes
   contentTypes.concat(singleTypes).forEach((contentType, i) => {
     const items = entities[i]
-    items.forEach(item => {
+    items.forEach((item, i) => {
       const node = Node(capitalize(contentType), item)
       // Adding new created nodes in an Array
       newNodes.push(node)

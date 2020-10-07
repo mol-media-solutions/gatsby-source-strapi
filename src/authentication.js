@@ -1,27 +1,34 @@
-import { has } from 'lodash/fp'
 import axios from 'axios'
 
 module.exports = async ({ loginData, reporter, apiURL }) => {
-  const validIndentifier = has('identifier', loginData) && loginData.identifier.length !== 0
-  const validPassword = has('password', loginData) && loginData.password.length !== 0
+  let jwtToken = null
 
-  if (validIndentifier && validPassword) {
-    const authenticationActivity = reporter.activityTimer(`Authenticate Strapi User`)
+  // Check if loginData is set.
+  if (
+    loginData.hasOwnProperty('identifier') &&
+    loginData.identifier.length !== 0 &&
+    loginData.hasOwnProperty('password') &&
+    loginData.password.length !== 0
+  ) {
+    const authenticationActivity = reporter.activityTimer(
+      `Authenticate Strapi User`
+    )
     authenticationActivity.start()
+
+    // Define API endpoint.
+    const loginEndpoint = `${apiURL}/auth/local`
 
     // Make API request.
     try {
-      const loginResponse = await axios.post(`${apiURL}/auth/local`, loginData)
+      const loginResponse = await axios.post(loginEndpoint, loginData)
 
-      authenticationActivity.end()
-
-      if (has('data', loginResponse)) {
-        return loginResponse.data.jwt
+      if (loginResponse.hasOwnProperty('data')) {
+        jwtToken = loginResponse.data.jwt
       }
     } catch (e) {
       reporter.panic('Strapi authentication error: ' + e)
     }
+    authenticationActivity.end()
   }
-
-  return null
+  return jwtToken
 }
